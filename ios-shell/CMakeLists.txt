@@ -12,6 +12,7 @@ set(APP_ID "com.example.heapsios" CACHE STRING "Bundle identifier")
 set(APP_NAME "Heaps App" CACHE STRING "The name under the icon")
 set(APP_VERSION "1.0" CACHE STRING "CFBundleShortVersionString")
 set(APP_BUILD "1" CACHE STRING "CFBundleVersion")
+set(APP_ICON "" CACHE FILEPATH "A 1024 px PNG without transparency: the app's icon")
 
 if(NOT EXISTS "${HL_SOURCE}/libs/sdl/sdl.c")
     message(FATAL_ERROR "HL_SOURCE (${HL_SOURCE}) is not a HashLink checkout")
@@ -66,4 +67,15 @@ if(ASSETS_DIR AND EXISTS "${ASSETS_DIR}")
     add_custom_command(TARGET app POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory "${ASSETS_DIR}" "$<TARGET_BUNDLE_CONTENT_DIR:app>/assets"
         COMMENT "Copying assets into the bundle")
+endif()
+
+# The app icon: after the assets, and after CMake has written Info.plist into the bundle.
+if(APP_ICON)
+    if(NOT EXISTS "${APP_ICON}")
+        message(FATAL_ERROR "APP_ICON (${APP_ICON}) does not exist")
+    endif()
+    add_custom_command(TARGET app POST_BUILD
+        COMMAND sh "${CMAKE_CURRENT_SOURCE_DIR}/add_icon.sh" "${APP_ICON}" "${CMAKE_CURRENT_BINARY_DIR}/icon"
+                "$<TARGET_BUNDLE_DIR:app>" "${CMAKE_OSX_SYSROOT}" "${CMAKE_OSX_DEPLOYMENT_TARGET}"
+        COMMENT "Compiling the app icon")
 endif()

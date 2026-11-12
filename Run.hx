@@ -5,13 +5,16 @@ import sys.io.Process;
 import haxe.io.Path;
 
 /**
- * `haxelib run heaps-ios <hlcDir> [simulator] [appId] [label] [version=<s>] [build=<n>] <projectFolder>`
+ * `haxelib run heaps-ios <hlcDir> [simulator] [appId] [label] [version=<s>] [build=<n>] [icon=<png>] <projectFolder>`
  * (haxelib appends the project folder), usually a --cmd at the end of the project's iOS hxml.
  *
  *   1. Configures ios-shell/ with CMake into <project>/bin/ios-heaps/<sdk>/: the generated
  *      HashLink C from <hlcDir>, HashLink itself and what it links, all for iOS arm64.
  *   2. Builds HeapsApp.app, with <project>/assets inside it.
  *   3. simulator: boots an iPhone simulator if none is running, installs the app and launches it.
+ *
+ * `icon=` is the app's icon: a 1024 px PNG without transparency, relative to the project folder.
+ * Without it the app has iOS's blank placeholder.
  *
  * HashLink's source is $HASHLINK_SRC, or the checkout the project's `hashlink` haxelib is a dev
  * link into (<checkout>/other/haxelib).
@@ -25,9 +28,10 @@ class Run {
         if (projectFolder == null || !FileSystem.isDirectory(projectFolder)) fail("no project folder (run through `haxelib run heaps-ios`)");
         Sys.setCwd(projectFolder);
 
-        var positional = [], version = "1.0", build = "1";
+        var positional = [], version = "1.0", build = "1", icon = "";
         for (a in args) {
             if (StringTools.startsWith(a, "version=")) version = a.substr(8);
+            else if (StringTools.startsWith(a, "icon=")) icon = a.substr(5);
             else if (StringTools.startsWith(a, "build=")) build = a.substr(6);
             else positional.push(a);
         }
@@ -47,6 +51,10 @@ class Run {
         var shell = Path.join([libRoot, "ios-shell"]);
         var buildDir = Path.join([FileSystem.absolutePath("bin/ios-heaps"), sdk]);
         var assets = FileSystem.absolutePath("assets");
+        if (icon != "") {
+            icon = FileSystem.absolutePath(icon);
+            if (!FileSystem.exists(icon)) fail('icon: $icon does not exist');
+        }
 
         Sys.println('--- heaps-ios: configuring ($sdk, HashLink at $hlSource) ---');
         run("cmake", [
@@ -60,6 +68,7 @@ class Run {
             "-DAPP_NAME=" + label,
             "-DAPP_VERSION=" + version,
             "-DAPP_BUILD=" + build,
+            "-DAPP_ICON=" + icon,
         ]);
         Sys.println("--- heaps-ios: building (the first run downloads and compiles SDL3 and the other libraries) ---");
         run("cmake", ["--build", buildDir, "--target", "app", "-j" + cpus()]);
@@ -78,7 +87,7 @@ class Run {
         Sys.println('--- heaps-ios: installing on ${device.name} and launching $appId ---');
         run("xcrun", ["simctl", "install", device.udid, app]);
         // A copy already running keeps the old binary on screen.
-        Sys.command("xcrun", ["simctl", "terminate", device.udid, appId]);
+        output("xcrun", ["simctl", "terminate", device.udid, appId]);   // quiet: it complains when none runs
         run("xcrun", ["simctl", "launch", device.udid, appId]);
     }
 

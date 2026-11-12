@@ -15,7 +15,10 @@ In the project's iOS hxml:
 --cmd haxelib run heaps-ios build/ios/c simulator com.example.MyApp "My App"
 ```
 
-`haxelib run heaps-ios <hlcDir> [simulator] [appId] [label] [version=<s>] [build=<n>]`
+`haxelib run heaps-ios <hlcDir> [simulator] [appId] [label] [version=<s>] [build=<n>] [icon=<png>]`
+
+`icon=` is the app's icon, a 1024 px PNG without transparency (iOS rounds the corners itself):
+`ios-shell/add_icon.sh` compiles it into the bundle with `actool`, which makes every size.
 
 Needs a Mac with Xcode, CMake 3.28+, and a HashLink 2.0+ checkout: `$HASHLINK_SRC`, or the one
 the project's `hashlink` haxelib is a dev link into. With a project-local `.haxelib`, link the
@@ -63,4 +66,4 @@ SDL, which uses the iOS pasteboard.
 
 - A touch way to copy and paste in a text field (there is no long-press menu), opening URLs,
   and heaps-android's other `haxeui_*` natives (back button, billing).
-- Device builds, signing, icons, TestFlight.
+- Device builds, signing, TestFlight.
