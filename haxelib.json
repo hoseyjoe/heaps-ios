@@ -1,0 +1,13 @@
+{
+    "name": "heaps-ios",
+    "url": "https://github.com/hoseyjoe/heaps-ios",
+    "license": "MIT",
+    "tags": ["haxeui", "heaps", "ios", "backend"],
+    "description": "iOS target for HaxeUI + Heaps. Wraps a HashLink-to-C (hl2c) output in an SDL3 app bundle, built with CMake against a HashLink checkout, and runs it in the iOS Simulator.",
+    "version": "0.0.1",
+    "releasenote": "First scaffold: hlc + SDL3, iOS Simulator only.",
+    "classPath": "hxheaps-ios",
+    "contributors": ["hosey"],
+    "run": "Run.hx",
+    "dependencies": {}
+}
