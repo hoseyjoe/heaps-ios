@@ -38,7 +38,7 @@ add_subdirectory("${HL_SOURCE}" hashlink EXCLUDE_FROM_ALL)
 # hl2c writes one .c per class in per-package folders; with HL_MAKE main.c does not include them.
 file(GLOB_RECURSE HLC_SOURCES CONFIGURE_DEPENDS "${HLC_DIR}/*.c")
 
-add_executable(app MACOSX_BUNDLE ${HLC_SOURCES} main_shim.m)
+add_executable(app MACOSX_BUNDLE ${HLC_SOURCES} main_shim.m file_dialog.m)
 set_target_properties(app PROPERTIES
     OUTPUT_NAME HeapsApp
     MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_BINARY_DIR}/Info.plist"
@@ -46,6 +46,8 @@ set_target_properties(app PROPERTIES
 configure_file(Info.plist.in "${CMAKE_CURRENT_BINARY_DIR}/Info.plist" @ONLY)
 
 target_include_directories(app PRIVATE "${HLC_DIR}" "${HL_SOURCE}/src")
+# The shim's Objective-C uses ARC (the picker's delegate is kept by a strong static).
+set_source_files_properties(main_shim.m file_dialog.m PROPERTIES COMPILE_OPTIONS "-fobjc-arc")
 target_compile_definitions(app PRIVATE HL_MAKE)
 # The generated C is not written for a human's warnings.
 target_compile_options(app PRIVATE -w)
@@ -57,6 +59,7 @@ target_link_libraries(app PRIVATE
     sdl.hdll fmt.hdll ui.hdll uv.hdll ssl.hdll sqlite.hdll fontsys.hdll heaps.hdll
     SDL3::SDL3
     "-framework UIKit" "-framework Foundation" "-framework OpenGLES" "-framework CoreText"
+    "-framework UniformTypeIdentifiers"
 )
 
 if(ASSETS_DIR AND EXISTS "${ASSETS_DIR}")

@@ -49,8 +49,18 @@ as if it were the window, so the app stays clear of the status bar, the Dynamic 
 home indicator; the bands outside take the clear colour. `sdl.Sdl.setHint("HL_IOS_SAFE_AREA", "0")`
 before the window is made gives the app the whole screen.
 
+## Files and the clipboard
+
+`haxe.ui.backend.ios.FileDialog` is the iOS document picker (the Files sheet), with the calls of
+heaps-android's `haxe.ui.backend.android.FileDialog`: `openToFile(mime, subdir, callback)` copies
+the pick into `subdir` of the working directory and hands back its path; `saveAs(mime, name,
+bytes, callback)` asks where to save. The natives are in `ios-shell/file_dialog.m`.
+
+The clipboard needs nothing here: `hxd.System.getClipboardText` / `setClipboardText` go through
+SDL, which uses the iOS pasteboard.
+
 ## Not done yet
 
-- Clipboard, file pickers and opening URLs (heaps-android's `haxeui_*` natives have no iOS
-  side).
+- A touch way to copy and paste in a text field (there is no long-press menu), opening URLs,
+  and heaps-android's other `haxeui_*` natives (back button, billing).
 - Device builds, signing, icons, TestFlight.
