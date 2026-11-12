@@ -29,8 +29,18 @@ hdlls, static) and the libraries HashLink downloads (SDL3, libpng, libjpeg-turbo
 Mbed TLS, libuv) into `HeapsApp.app`, with the project's `assets/` inside. It then boots an
 iPhone simulator if none is running, installs the app and launches it.
 
-`ios-shell/main_shim.m` is the entry point SDL calls: it points `HOME` at the app's Documents
-folder and the working directory at the bundle, then runs HashLink's main.
+`ios-shell/main_shim.m` is the entry point SDL calls. It makes the app's Application Support
+folder both `HOME` and the working directory (the bundle is read-only on a device and replaced by
+every update, so nothing may be saved there), links `assets` in it to the bundle's, and runs
+HashLink's main.
+
+## The keyboard
+
+A Heaps text field starts SDL text input when it takes focus, and that raises the iOS keyboard:
+`main_shim.m` sets `SDL_HINT_ENABLE_SCREEN_KEYBOARD` so it also does in the Simulator, where SDL
+sees the Mac's keyboard. SDL slides the whole view up when the keyboard would cover the field
+being typed in (HashLink's binding pads the field's rect so its border clears the keyboard too).
+In the Simulator, I/O > Keyboard > Toggle Software Keyboard shows it.
 
 ## The safe area
 
@@ -41,6 +51,6 @@ before the window is made gives the app the whole screen.
 
 ## Not done yet
 
-- The on-screen keyboard, clipboard, file pickers and opening URLs (heaps-android's `haxeui_*`
-  natives have no iOS side).
+- Clipboard, file pickers and opening URLs (heaps-android's `haxeui_*` natives have no iOS
+  side).
 - Device builds, signing, icons, TestFlight.

@@ -12,13 +12,25 @@ extern int heaps_ios_hl_main(int argc, char *argv[]);
 
 int main(int argc, char *argv[]) {
     @autoreleasepool {
-        // What the app keeps (settings, its database) is resolved from HOME: the container's
-        // root is not writable on a device, its Documents folder is.
-        NSString *docs = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) firstObject];
-        if (docs) setenv("HOME", [docs fileSystemRepresentation], 1);
-        // The project's assets/ folder is in the bundle; Heaps opens it relative to here.
-        NSString *res = [[NSBundle mainBundle] resourcePath];
-        if (res) chdir([res fileSystemRepresentation]);
+        // The bundle cannot be written to on a device, and an update replaces it. What the app
+        // keeps (settings, a database "next to the app") goes in Application Support, which iOS
+        // backs up and hides from the Files app: that is HOME and the working directory.
+        NSFileManager *fm = [NSFileManager defaultManager];
+        NSString *data = [NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES) firstObject];
+        if (data && [fm createDirectoryAtPath:data withIntermediateDirectories:YES attributes:nil error:nil]) {
+            setenv("HOME", [data fileSystemRepresentation], 1);
+            chdir([data fileSystemRepresentation]);
+            // Heaps opens the project's assets/ folder relative to the working directory: a link
+            // to the one in the bundle, remade every launch since the bundle moves with an update.
+            NSString *link = [data stringByAppendingPathComponent:@"assets"];
+            NSString *assets = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"assets"];
+            [fm removeItemAtPath:link error:nil];
+            [fm createSymbolicLinkAtPath:link withDestinationPath:assets error:nil];
+        }
     }
+    // SDL raises the on-screen keyboard with text input only when it sees no hardware keyboard,
+    // and in the Simulator it always sees the Mac's. Always ask: iOS itself keeps the keyboard
+    // down while a real one is attached.
+    SDL_SetHint(SDL_HINT_ENABLE_SCREEN_KEYBOARD, "1");
     return heaps_ios_hl_main(argc, argv);
 }
